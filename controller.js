@@ -38,14 +38,14 @@ async function handlePost(req, res, dynamicParam) {
     let query = !q.includes('toArray()') ? `${q}.toArray()` : q;
     query = query.replace('db.getCollection', 'db.collection');
 
-    if (!query.includes('db.collection')) {
-      const tx = query.split('db.')[1].split('.');
-      const q = `db.collection('${tx[0]}').`;
-      const xx = tx.slice(1);
-      query = q + xx.join('.');
-    }
-
     try {
+      if (!query.includes('db.collection')) {
+        const tx = query.split('db.')[1].split('.');
+        const q = `db.collection('${tx[0]}').`;
+        const xx = tx.slice(1);
+        query = q + xx.join('.');
+      }
+
       const data = await eval(query);
       const json2csvParser = new Json2csvParser({ header: true });
       const message = json2csvParser.parse(data);
