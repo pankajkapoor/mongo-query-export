@@ -6,10 +6,37 @@ const DB = require('./DB');
 
 // route => '/' @method => GET
 function getIndex(req, res) {
+  const DB_LIST = process.env.DB_LIST;
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.statusCode = 200;
-  res.end(fs.readFileSync('./index.html'));
+  let output = fs.readFileSync('./index.html', 'utf-8');
+  const availableDb = Object.keys(JSON.parse(DB_LIST));
+
+  const data = {
+    options: ['<option selected disabled>---select a DB---</option>'].concat(
+      availableDb.map(
+        (option) => `<option value='${option}'>${option}</option>`,
+      ),
+    ),
+  };
+
+  const variables = Object.keys(data);
+
+  variables.forEach((variable, index) => {
+    const pattern = new RegExp(`{{${variable}}}`, 'g');
+    output = output.replace(pattern, data[variable]);
+  });
+
+  res.end(output);
+}
+
+function getScript(req, res) {
+  res.setHeader('Content-Type', 'text/javascript');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.statusCode = 200;
+  let output = fs.readFileSync('./main.js', 'utf-8');
+  res.end(output);
 }
 
 // route => '/run' @method => POST
@@ -54,6 +81,7 @@ async function handlePost(req, res, dynamicParam) {
       res.setHeader('Content-Disposition', 'attatchment;filename=boka.csv');
       // Respond with a simple JSON message
       res.statusCode = 200; // OK
+      res.cookie('isLoaderActive', '', { expires: new Date(0) });
       res.end(message);
     } catch (err) {
       console.error(err);
@@ -65,17 +93,8 @@ async function handlePost(req, res, dynamicParam) {
   });
 }
 
-// route => '/DB' @method => DB
-function getDB(req, res) {
-  const DB_LIST = process.env.DB_LIST;
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.statusCode = 200;
-  res.end(DB_LIST);
-}
-
 module.exports = {
   getIndex,
   handlePost,
-  getDB,
+  getScript,
 };

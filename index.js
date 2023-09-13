@@ -1,6 +1,6 @@
 const http = require('http');
 
-const { getIndex, handlePost, getDB } = require('./controller');
+const { getIndex, handlePost, getDB, getScript } = require('./controller');
 
 require('dotenv').config();
 
@@ -18,8 +18,8 @@ const server = http.createServer(async (req, res) => {
       getIndex(req, res);
       break;
 
-    case 'GET DB':
-      getDB(req, res);
+    case 'GET main.js':
+      getScript(req, res);
       break;
 
     case 'POST run':
