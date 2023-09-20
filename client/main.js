@@ -7,17 +7,19 @@ const downloadBtn = document.getElementById('Download');
 const copyBtn = document.getElementById('copy');
 const previousQueryContainer = document.getElementById('previousQuries');
 const dbHeading = document.getElementById('dbHeading');
+const loaderParent = document.getElementById('loader_parent');
 
 // SESSION STORAGE
 const currentQuery = sessionStorage.getItem('query') || '';
-const previousQuriesSession = localStorage.getItem('previousQuries') || '';
+const previousQuriesSession = () =>
+  localStorage.getItem('previousQuries') || '';
 const selectedDB = sessionStorage.getItem('selectedDB');
 
 // IIFE
 (function () {
   queryTextArea.value = currentQuery;
   updatePreviousQueries(
-    !!previousQuriesSession ? JSON.parse(previousQuriesSession) : [],
+    !!previousQuriesSession() ? JSON.parse(previousQuriesSession()) : [],
   );
   if (!!selectedDB) {
     dbHeading.textContent = `Your current active DB is '${selectedDB}'`;
@@ -31,12 +33,30 @@ const selectedDB = sessionStorage.getItem('selectedDB');
 
 // FUNCTION TO HANDEL THE CLICK OF DOWNLOAD BTN
 function handelDownload() {
-  const previousQuries = previousQuriesSession
+  const previousQuries = previousQuriesSession()
     ? JSON.parse(localStorage.getItem('previousQuries'))
     : [];
   previousQuries.push(queryTextArea.value);
-  localStorage.setItem('previousQuries', JSON.stringify(previousQuries));
-  updatePreviousQueries(previousQuries);
+
+  localStorage.setItem(
+    'previousQuries',
+    JSON.stringify([...new Set(previousQuries)]),
+  );
+  document.cookie = 'isLoading=true';
+  loadingHandler();
+  updatePreviousQueries([...new Set(previousQuries)]);
+}
+
+// HANDLES THE LOADING STATE OF THE WEBAPP
+function loadingHandler() {
+  loaderParent.style.display = 'flex';
+  const interval = setInterval(() => {
+    const cookie = document.cookie;
+    if (!cookie) {
+      loaderParent.style.display = 'none';
+      clearInterval(interval);
+    }
+  }, 1000);
 }
 
 // UPDATES THE PREVIOUS QUERY INNER HTML
@@ -47,8 +67,9 @@ function updatePreviousQueries(previousQuery) {
       return `<div class="previous_query" id=${index}>
         <i class="bi bi-arrow-left" style="cursor: pointer" id='switchQuery' key=${index}></i>
         <p>
-         ${ele}
+        ${ele}
         </p>
+        <i class="bi bi-trash" style="cursor: pointer" id='deleteQuery' key=${index}></i>
       </div>`;
     });
 
@@ -60,9 +81,18 @@ function updatePreviousQueries(previousQuery) {
     document.querySelectorAll('#switchQuery').forEach((ele) => {
       ele?.addEventListener('click', (e) => {
         const clickedBtnId = e.target.getAttribute('key');
-        const query = JSON.parse(previousQuriesSession);
+        const query = JSON.parse(previousQuriesSession());
         const selectedQuery = query[clickedBtnId];
         queryTextArea.value = selectedQuery;
+      });
+    });
+    document.querySelectorAll('#deleteQuery').forEach((ele) => {
+      ele?.addEventListener('click', (e) => {
+        const clickedBtnId = e.target.getAttribute('key');
+        const currentQuery = JSON.parse(localStorage.getItem('previousQuries'));
+        currentQuery.splice(clickedBtnId, 1);
+        localStorage.setItem('previousQuries', JSON.stringify(currentQuery));
+        updatePreviousQueries(currentQuery);
       });
     });
   }
@@ -109,4 +139,5 @@ prettyCodeBtn.addEventListener('click', function () {
     prettyCodeMain.innerHTML = data;
     Prism.highlightAll();
   }
+  prettyCodeInput.scrollIntoView();
 });

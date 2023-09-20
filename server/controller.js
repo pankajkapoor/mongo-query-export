@@ -77,6 +77,10 @@ async function handlePost(req, res, dynamicParam) {
       const message = json2csvParser.parse(data);
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader(
+        'Set-Cookie',
+        'isLoading=false; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/',
+      );
       res.setHeader('Content-Disposition', 'attatchment;filename=boka.csv');
       // Respond with a simple JSON message
       res.statusCode = 200; // OK
