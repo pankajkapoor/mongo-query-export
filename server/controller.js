@@ -1,7 +1,6 @@
 const fs = require('fs');
 const Json2csvParser = require('json2csv').Parser;
 const qs = require('querystring');
-
 const DB = require('./DB');
 
 // route => '/' @method => GET
@@ -10,7 +9,7 @@ function getIndex(req, res) {
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.statusCode = 200;
-  let output = fs.readFileSync('./index.html', 'utf-8');
+  let output = fs.readFileSync('./client/index.html', 'utf-8');
   const availableDb = Object.keys(JSON.parse(DB_LIST));
 
   const data = {
@@ -35,7 +34,14 @@ function getScript(req, res) {
   res.setHeader('Content-Type', 'text/javascript');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.statusCode = 200;
-  let output = fs.readFileSync('./main.js', 'utf-8');
+  let output = fs.readFileSync('./client/main.js', 'utf-8');
+  res.end(output);
+}
+function getStyle(req, res) {
+  res.setHeader('Content-Type', 'text/javascript');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.statusCode = 200;
+  let output = fs.readFileSync('./client/styles.css', 'utf-8');
   res.end(output);
 }
 
@@ -96,4 +102,5 @@ module.exports = {
   getIndex,
   handlePost,
   getScript,
+  getStyle,
 };

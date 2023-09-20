@@ -31,12 +31,9 @@ const selectedDB = sessionStorage.getItem('selectedDB');
 
 // FUNCTION TO HANDEL THE CLICK OF DOWNLOAD BTN
 function handelDownload() {
-  let previousQuries;
-  if (previousQuriesSession) {
-    previousQuries = JSON.parse(localStorage.getItem('previousQuries'));
-  } else {
-    previousQuries = [];
-  }
+  const previousQuries = previousQuriesSession
+    ? JSON.parse(localStorage.getItem('previousQuries'))
+    : [];
   previousQuries.push(queryTextArea.value);
   localStorage.setItem('previousQuries', JSON.stringify(previousQuries));
   updatePreviousQueries(previousQuries);
