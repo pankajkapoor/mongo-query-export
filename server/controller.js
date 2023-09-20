@@ -37,13 +37,6 @@ function getScript(req, res) {
   let output = fs.readFileSync('./client/main.js', 'utf-8');
   res.end(output);
 }
-function getStyle(req, res) {
-  res.setHeader('Content-Type', 'text/javascript');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.statusCode = 200;
-  let output = fs.readFileSync('./client/styles.css', 'utf-8');
-  res.end(output);
-}
 
 // route => '/run' @method => POST
 async function handlePost(req, res, dynamicParam) {
@@ -102,5 +95,4 @@ module.exports = {
   getIndex,
   handlePost,
   getScript,
-  getStyle,
 };
