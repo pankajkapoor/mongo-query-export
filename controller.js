@@ -81,7 +81,6 @@ async function handlePost(req, res, dynamicParam) {
       res.setHeader('Content-Disposition', 'attatchment;filename=boka.csv');
       // Respond with a simple JSON message
       res.statusCode = 200; // OK
-      res.cookie('isLoaderActive', '', { expires: new Date(0) });
       res.end(message);
     } catch (err) {
       console.error(err);
