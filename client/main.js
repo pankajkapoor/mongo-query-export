@@ -95,6 +95,8 @@ function updatePreviousQueries(previousQuery) {
         updatePreviousQueries(currentQuery);
       });
     });
+  } else {
+    previousQueryContainer.innerHTML = '';
   }
 }
 
