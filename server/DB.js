@@ -6,8 +6,6 @@ async function DB(selectedDB) {
   const SELECTED_DB_URL = JSON.parse(DB_LIST)[selectedDB];
   const SELECTED_DB_NAME = JSON.parse(DB_NAME)[selectedDB];
 
-  console.log(SELECTED_DB_NAME, SELECTED_DB_URL);
-
   if (!SELECTED_DB_URL) {
     return { db: '', client: '', error: true };
   }
