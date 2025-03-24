@@ -11,37 +11,25 @@ const loaderParent = document.getElementById('loader_parent');
 
 // SESSION STORAGE
 const currentQuery = sessionStorage.getItem('query') || '';
-const previousQuriesSession = () =>
-  localStorage.getItem('previousQuries') || '';
-const selectedDB = sessionStorage.getItem('selectedDB');
+const previousQuriesSession = () => localStorage.getItem('previousQuries') || '';
+var selectedDB = sessionStorage.getItem('selectedDB');
 
 // IIFE
 (function () {
   queryTextArea.value = currentQuery;
-  updatePreviousQueries(
-    !!previousQuriesSession() ? JSON.parse(previousQuriesSession()) : [],
-  );
+  updatePreviousQueries(!!previousQuriesSession() ? JSON.parse(previousQuriesSession()) : []);
   if (!!selectedDB) {
     dbHeading.textContent = `Your current active DB is '${selectedDB}'`;
     document.querySelector(`option[value=${selectedDB}]`).selected = true;
-    dynamicForm.action = `/run/${selectedDB}`;
-    if (currentQuery && currentQuery.length > 1) {
-      downloadBtn.disabled = false;
-    }
   }
 })();
 
 // FUNCTION TO HANDEL THE CLICK OF DOWNLOAD BTN
 function handelDownload() {
-  const previousQuries = previousQuriesSession()
-    ? JSON.parse(localStorage.getItem('previousQuries'))
-    : [];
+  const previousQuries = previousQuriesSession() ? JSON.parse(localStorage.getItem('previousQuries')) : [];
   previousQuries.push(queryTextArea.value);
 
-  localStorage.setItem(
-    'previousQuries',
-    JSON.stringify([...new Set(previousQuries)]),
-  );
+  localStorage.setItem('previousQuries', JSON.stringify([...new Set(previousQuries)]));
   document.cookie = 'isLoading=true';
   loadingHandler();
   updatePreviousQueries([...new Set(previousQuries)]);
@@ -50,13 +38,6 @@ function handelDownload() {
 // HANDLES THE LOADING STATE OF THE WEBAPP
 function loadingHandler() {
   loaderParent.style.display = 'flex';
-  const interval = setInterval(() => {
-    const cookie = document.cookie;
-    if (!cookie) {
-      loaderParent.style.display = 'none';
-      clearInterval(interval);
-    }
-  }, 1000);
 }
 
 // UPDATES THE PREVIOUS QUERY INNER HTML
@@ -111,24 +92,15 @@ function copyHandler() {
 
 // HANDEL THE DB CHANGE
 function handelDbChange(e) {
-  const currentQuery = sessionStorage.getItem('query') || '';
   sessionStorage.setItem('selectedDB', e);
+  selectedDB = e;
   dbHeading.textContent = `your current active DB is '${dbDropdown.value}'`;
-  dynamicForm.action = `/run/${e}`;
-  if (currentQuery && currentQuery.length > 1) {
-    downloadBtn.disabled = false;
-  }
 }
 
 // UPDATES THE VALUE OF THE CURRENT QUERY IN THE SESSION STORAGE TO PERSIST IT'S VALUE
 queryTextArea.addEventListener('input', (event) => {
   const updatedValue = event.target.value;
   sessionStorage.setItem('query', updatedValue);
-  if (sessionStorage.getItem('selectedDB') && updatedValue.length > 1) {
-    downloadBtn.disabled = false;
-  } else if (updatedValue.length < 1) {
-    downloadBtn.disabled = true;
-  }
 });
 
 // EVENT ON THE PRETTY CODE BTN
@@ -143,3 +115,27 @@ prettyCodeBtn.addEventListener('click', function () {
   }
   prettyCodeInput.scrollIntoView();
 });
+
+document.querySelector('#submit').addEventListener('click', getData);
+
+function getData(e) {
+  e.preventDefault();
+  const data = document.querySelector('#query').value;
+  handelDownload();
+  fetch('/run/' + selectedDB, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query: data }),
+  })
+    .then((response) => response.text())
+    .then((data) => {
+      document.querySelector('#prettyPrint').innerHTML = data;
+      Prism.highlightAll();
+    })
+    .catch((error) => console.error('Error:', error))
+    .finally(() => {
+      loaderParent.style.display = 'none';
+    });
+}

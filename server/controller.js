@@ -1,7 +1,6 @@
 const fs = require('fs');
-const Json2csvParser = require('json2csv').Parser;
-const qs = require('querystring');
 const DB = require('./DB');
+const { ObjectId } = require('mongodb');  // this is required please don't remove it
 
 // route => '/' @method => GET
 function getIndex(req, res) {
@@ -14,9 +13,7 @@ function getIndex(req, res) {
 
   const data = {
     options: ['<option selected disabled>---select a DB---</option>'].concat(
-      availableDb.map(
-        (option) => `<option value='${option}'>${option}</option>`,
-      ),
+      availableDb.map((option) => `<option value='${option}'>${option}</option>`),
     ),
   };
 
@@ -54,14 +51,14 @@ async function handlePost(req, res, dynamicParam) {
   });
 
   req.on('end', async () => {
-    const formData = qs.parse(body);
+    const formData = JSON.parse(body);
     let q = formData.query.trim();
 
     if (q.endsWith(';')) {
       q = q.slice(0, -1);
     }
 
-    let query = !q.includes('toArray()') ? `${q}.toArray()` : q;
+    let query = q;
     query = query.replace('db.getCollection', 'db.collection');
 
     try {
@@ -71,20 +68,33 @@ async function handlePost(req, res, dynamicParam) {
         const xx = tx.slice(1);
         query = q + xx.join('.');
       }
+      // query = query + '.toArray()';
+      query = query + '.explain("executionStats")';
 
       const data = await eval(query);
-      const json2csvParser = new Json2csvParser({ header: true });
-      const message = json2csvParser.parse(data);
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader(
-        'Set-Cookie',
-        'isLoading=false; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/',
-      );
-      res.setHeader('Content-Disposition', 'attatchment;filename=boka.csv');
-      // Respond with a simple JSON message
+      res.setHeader('Content-Type', 'text/html');
       res.statusCode = 200; // OK
-      res.end(message);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Set-Cookie', 'isLoading=false; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/');
+
+      const executionTime = data.executionStats?.executionTimeMillis ?? data.stages?.[0]?.executionTimeMillisEstimate;
+      let formattedTime;
+      if (executionTime >= 60000) {
+        // Convert to minutes, seconds, and milliseconds
+        const minutes = Math.floor(executionTime / 60000);
+        const seconds = Math.floor((executionTime % 60000) / 1000);
+        const milliseconds = executionTime % 1000;
+        formattedTime = `${minutes} min ${seconds} sec ${milliseconds} ms`;
+      } else if (executionTime >= 1000) {
+        // Convert to seconds and milliseconds
+        const seconds = Math.floor(executionTime / 1000);
+        const milliseconds = executionTime % 1000;
+        formattedTime = `${seconds} sec ${milliseconds} ms`;
+      } else {
+        // Just milliseconds
+        formattedTime = `${executionTime} ms`;
+      }
+      res.end(`<pre>${formattedTime}</pre>`);
     } catch (err) {
       console.error(err);
       res.setHeader('Content-Type', 'text/html');
