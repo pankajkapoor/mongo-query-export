@@ -1,6 +1,6 @@
 const fs = require('fs');
 const DB = require('./DB');
-const { ObjectId } = require('mongodb');  // this is required please don't remove it
+const { ObjectId } = require('mongodb'); // this is required please don't remove it
 
 // route => '/' @method => GET
 function getIndex(req, res) {
@@ -61,6 +61,12 @@ async function handlePost(req, res, dynamicParam) {
     let query = q;
     query = query.replace('db.getCollection', 'db.collection');
 
+    if (!['find', 'aggregate'].some((method) => query.includes(`.${method}(`))) {
+      console.log('boka');
+      res.setHeader('Content-Type', 'text/html');
+      res.statusCode = 200; // OK
+      res.end("<h1 style='color:red'>Only find, aggregate are allowed<h1>");
+    }
     try {
       if (!query.includes('db.collection')) {
         const tx = query.split('db.')[1].split('.');
