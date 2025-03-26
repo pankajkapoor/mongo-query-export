@@ -10,7 +10,7 @@ async function DB(selectedDB) {
     return { db: '', client: '', error: true };
   }
 
-  const client = new MongoClient(SELECTED_DB_URL);
+  const client = new MongoClient(SELECTED_DB_URL,{appName: 'UL Query'});
   await client.connect().catch(console.error);
   console.log('Connected successfully to DB');
   const db = client.db(SELECTED_DB_NAME);
